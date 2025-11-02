@@ -12,7 +12,7 @@ from line_follower_v0.envs import LineFollowerEnv as LineFollower_v0
 class LineFollowerEnv(LineFollower_v0):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.action_space = spaces.Box(low=-5.0, high=5.0, shape=(2,), dtype=np.float32)
+        self.action_space = spaces.Box(low=-3.0, high=3.0, shape=(2,), dtype=np.float32)
 
     def step(self, action):
         dt = 0.05  # time step

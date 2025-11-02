@@ -31,11 +31,13 @@ class Car:
         self,
         sensor_grid = (4, 6),
         position=np.array([100, 100]),
-        angle = np.pi/8
+        angle = np.pi/8,
+        x_spacing=20,
+        y_spacing=20,
     ):
         self.sensor_grid = sensor_grid  # (rows, cols)
-        self.width  = sensor_grid[0]*20
-        self.height = sensor_grid[1]*20  # (width, height) in pixels
+        self.width  = sensor_grid[0]*y_spacing
+        self.height = sensor_grid[1]*x_spacing  # (width, height) in pixels
         self.pos0     = position  # (x, y) in pixels
         self.ang0     = angle     # angle in radians
         self.reset()
@@ -203,17 +205,26 @@ class Coins:
 
     def display(self, screen):
         YELLOW = (255, 255, 0)
-        RED = (255, 0, 0)
         GREEN = (0, 255, 0)
-        rad = 4
+        DEEP_ORANGE = (255, 140, 0)
+        RED = (255, 0, 0)
+
+        max_rad = 6
+        coin_color = DEEP_ORANGE
+        border_color = RED
+
         for i, coin in enumerate(self.coins, start=1):
-            t = i / len(self.coins)   # 0 → 1 across coins
-            # interpolate between YELLOW and BLACK
-            r = int(YELLOW[0] * max(1 - 2*t, 0))
-            g = int(YELLOW[1] * max(1 - 2*t, 0))
-            b = int(YELLOW[2] * max(1 - 2*t, 0))
-            color = (r, g, b)
-            pygame.draw.circle(screen, color, coin, rad)
-        # pygame.draw.circle(screen, GREEN, self.coins[0], rad)
+            t = i / len(self.coins)
+            rad = max(int(max_rad * (1 - 10*t) + 1), 0)
+            
+            if rad <= 0:
+                continue
+            
+            # First, draw the main filled yellow circle
+            # pygame.draw.circle(screen, coin_color, coin, rad)
+            pygame.draw.circle(screen, coin_color, coin, max_rad)
+            
+            # Then, draw the orange border on top
+            pygame.draw.circle(screen, border_color, coin, max_rad, 1)
 
         pygame.draw.circle(screen, GREEN, to_pygame(self.car.position), self.radius, 1)

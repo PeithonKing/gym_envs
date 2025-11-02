@@ -20,11 +20,17 @@ def rgb2gray(rgb):
     return np.dot(rgb[..., :4], [0.25, 0.25, 0.25, 0.25])
 
 
-action_to_inputs = (
-    (0.1, 1.0),  # slow down left wheel
-    (1.0, 1.0),  # both wheels normal speed
-    (1.0, 0.1),  # slow down right wheel
-)
+# action_to_inputs = np.array((
+#     (-1.0, +1.0),  # slow down left wheel
+#     (+1.0, +1.0),  # both wheels normal speed
+#     (+1.0, -1.0),  # slow down right wheel
+# ))*3
+
+action_to_inputs = np.array((
+    (0, 1),  # slow down left wheel
+    (1, 1),  # both wheels normal speed
+    (1, 0),  # slow down right wheel
+))*3
 
 
 class LineFollowerEnv(gym.Env):
@@ -42,11 +48,21 @@ class LineFollowerEnv(gym.Env):
         track="path",  # options = ["path", "path2"]
         max_steps=200,
         hitbox=20,
+        x_spacing=20,
+        y_spacing=20,
+        verbose=False,
+        invert_waypoints=None,
+        invert_colours=None,
     ):
         self.sensor_grid = sensor_grid
         self.track = track
         self.max_steps = max_steps
         self.hitbox = hitbox
+        self.x_spacing = x_spacing
+        self.y_spacing = y_spacing
+        self.verbose = verbose
+        self.invert_waypoints = invert_waypoints
+        self.invert_colours = invert_colours
 
         self.observation_space = spaces.MultiBinary(
             (sensor_grid[0] * sensor_grid[1],)
@@ -94,10 +110,21 @@ class LineFollowerEnv(gym.Env):
 
         self.track_image = (1 - rgb2gray(image.imread(png_path))).astype(bool)
         self.waypoints = np.load(npy_path)[::10]
+        self.pygame_track = pygame.image.load(png_path)#.convert_alpha()
         # reverse the waypoints with 50% probability
-        if random.random() < 0.5:
+        
+        if random.choice([True, False]) if self.invert_waypoints is None else self.invert_waypoints:
             self.waypoints = self.waypoints[::-1]
-        self.pygame_track = pygame.image.load(png_path)
+        #     if self.verbose: print("counter-clockwise")
+        # else:
+        #     if self.verbose: print("clockwise")
+        if random.choice([True, False]) if self.invert_colours is None else self.invert_colours:
+            self.track_image = np.logical_not(self.track_image)
+
+            # invert pygame surface
+            arr = pygame.surfarray.array3d(self.pygame_track)
+            arr = 255 - arr
+            self.pygame_track = pygame.surfarray.make_surface(arr)#.convert_alpha()
 
 
     def _get_obs(self):
@@ -129,7 +156,9 @@ class LineFollowerEnv(gym.Env):
         self.car = Car(
             sensor_grid=self.sensor_grid,
             position=to_pygame(this_pos),
-            angle=angle
+            angle=angle,
+            x_spacing=self.x_spacing,
+            y_spacing=self.y_spacing,
         )
 
         self.car_coins = Coins(
@@ -200,7 +229,7 @@ class LineFollowerEnv(gym.Env):
         canvas = pygame.Surface((WIDTH, HEIGHT))
         canvas.fill(WHITE)
         canvas.blit(self.pygame_track, (0, 0))
-        
+
         vals = sensor_vals if sensor_vals is not None else self._get_obs()
         
         self.car_coins.display(canvas)

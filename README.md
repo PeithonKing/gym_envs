@@ -1,3 +1,5 @@
+Not supposed to be useful alone. This is just the gymnasium environments. Used as submodule in a lot of other repositories.
+
 # Custom Gymnasium Environments
 
 This is a collection of all the custom Gymnasium environments we built for reinforcement learning experiments.
@@ -15,3 +17,4 @@ To install your new environment, run the following commands:
 pip install -e .
 ```
 
+you need to install it... so that you can import it in your code.
